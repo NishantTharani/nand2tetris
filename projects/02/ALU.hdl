@@ -42,5 +42,33 @@ CHIP ALU {
         ng; // 1 if (out < 0),  0 otherwise
 
     PARTS:
-   // Put you code here:
+        // Zero x/y if zx/zy is set
+        Mux16(a=x, b=false, sel=zx, out=zerx);
+        Mux16(a=y, b=false, sel=zy, out=zery);
+
+        // Negate x if nx is set
+        Not16(in=zerx, out=negxd);
+        Mux16(a=zerx, b=negxd, sel=nx, out=negx);
+
+        // Negate y if ny is set
+        Not16(in=zery, out=negyd);
+        Mux16(a=zery, b=negyd, sel=ny, out=negy);
+
+        // Set out depending on f
+        Add16(a=negx, b=negy, out=xaddy);
+        And16(a=negx, b=negy, out=xandy);
+        Mux16(a=xandy, b=xaddy, sel=f, out=outpn);
+
+        // Negate out if no is set
+        Not16(in=outpn, out=outn);
+        Mux16(a=outpn, b=outn, sel=no, out[15]=out15, out[0..7]=firstOut, out[8..15]=secondOut);
+        Or16(a[0..7]=firstOut, a[8..15]=secondOut, b[0..15]=false, out=out);
+
+        // Set ng if the output is negative by 2s complement
+        Or(a=out15, b=false, out=ng);
+
+        // Set zr if the output is zero
+        Or8Way(in=firstOut, out=z1);
+        Or8Way(in=secondOut, out=z2);
+        Or(a=z1, b=z2, out=zr);
 }
