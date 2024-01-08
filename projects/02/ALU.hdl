@@ -50,4 +50,19 @@ CHIP ALU {
     Not16(in=yzerod, out=yneg);
     Mux16(a=xzerod, b=xneg, sel=nx, out=xprocd);
     Mux16(a=yzerod, b=yneg, sel=ny, out=yprocd);
+
+    // Perform the main operation - + or &
+    And16(a=xprocd, b=yprocd, out=anded);
+    Add16(a=xprocd, b=yprocd, out=added);
+    Mux16(a=anded, b=added, sel=f, out=almostout);
+
+    // Negate the output if necessary
+    Not16(in=almostout, out=outneg);
+    Mux16(a=almostout, b=outneg, sel=no, out=out, out[0..7]=topout, out[8..15]=bottomout, out[15]=ng);
+
+    // Set zr
+    Or8Way(in=topout, out=zr1);
+    Or8Way(in=bottomout, out=zr2);
+    Or(a=zr1, b=zr2, out=notzr);
+    Not(in=notzr, out=zr);
 }
